@@ -1,0 +1,11 @@
+name: cmip6-hackathon-demos
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - matplotlib
+  - xarray
+  - toolz
+  - gcsfs
+  - dask
+  - distributed
