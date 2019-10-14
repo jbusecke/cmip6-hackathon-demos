@@ -9,3 +9,13 @@ dependencies:
   - gcsfs
   - dask
   - distributed
+  - pip
+  - xhistogram
+  - zarr
+  - qgrid
+  - nc-time-axis
+  - cftime
+  - pyproj
+  - cartopy
+  - pip: 
+      - git+https://github.com/xgcm/xgcm.git 
