@@ -1,6 +1,28 @@
 # Preprocessing for CMIP6 models
 import xarray as xr
 import warnings
+from recreate_grids import merge_variables_on_staggered_grid, recreate_metrics
+
+
+
+def full_preprocessing(dat_dict, modelname, plot=False, verbose=False):
+    """Fully preprocess data for one model ensemble . 
+    The input needs to be a dictionary in the form: {'<source_id>':{'<varname_a>':'<uri_a>', '<varname_b>':'<uri_b>', ...}}
+    """
+    renaming_dict = cmip6_renaming_dict()
+    # homogenize the naming
+    dat_dict = {var: cmip6_homogenization(data, renaming_dict[modelname]) for var, data in dat_dict.items()}
+    
+    # broadcast lon and lat values if they are 1d
+    if renaming_dict[modelname]['lon'] is None:
+        dat_dict = {var: broadcast_lonlat(data) for var, data in dat_dict.items()}
+    
+    # merge all variables together on the correct staggered grid
+    ds = merge_variables_on_staggered_grid(dat_dict, modelname, plot=plot, verbose=verbose)
+    
+    grid_temp = Grid(ds)
+    ds = recreate_metrics(ds, grid_temp)
+    return ds
 
 def cmip6_homogenization(ds, dim_name_di, printing=False):
     """Homogenizes cmip6 dadtasets to common naming and e.g. vertex order"""
