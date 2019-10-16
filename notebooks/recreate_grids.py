@@ -37,7 +37,7 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
     if grid_type == 'A':
         # this should also work with interpolated and obs datasets
         # Just merge everything together
-        ds_combined = xr.merge([v for v in data_dict.values])
+        ds_combined = xr.merge([v for v in data_dict.values()])
         ds_full = generate_grid_ds(ds_combined, {"X": "x", "Y": "y"},
                                    position=("center", "left"))
     else:
@@ -137,7 +137,12 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
             
             if verbose:
                 print('Merge')
-            ds_full = xr.merge([ds_full, da_renamed])
+            
+            # place all new data_variables into the dataset
+            for dvar in da_renamed.data_vars:
+                if dvar not in ds_full.data_vars:
+                    ds_full[dvar] = da_renamed[dvar]
+#             ds_full = xr.merge([ds_full, da_renamed])
     return ds_full
 
     

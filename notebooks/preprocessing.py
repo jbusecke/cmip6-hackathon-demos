@@ -1,5 +1,6 @@
 # Preprocessing for CMIP6 models
 import xarray as xr
+import warnings
 
 def cmip6_homogenization(ds, dim_name_di, printing=False):
     """Homogenizes cmip6 dadtasets to common naming and e.g. vertex order"""
@@ -25,7 +26,8 @@ def cmip6_homogenization(ds, dim_name_di, printing=False):
                             print('Filled lat with y')
                 else:
                     
-                    raise RuntimeError('Variable [%s] not found in %s' %(dim_name_di[di], ds.coords))
+#                     raise RuntimeError('Variable [%s] not found in %s' %(dim_name_di[di], ds.coords))
+                    warnings.warn('Variable [%s] not found in %s' %(dim_name_di[di], ds.coords))
         else:
             if printing:
                 print('Skipped renaming for [%s]. Name already correct.' %di)
