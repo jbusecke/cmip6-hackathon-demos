@@ -13,7 +13,8 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
                                       tracer_ref='thetao',
                                       u_ref='uo',
                                       v_ref='vo',
-                                      plot=True):
+                                      plot=True,
+                                      verbose=False):
     """Parses datavariables according to their staggered grid position.
     Should also work for gr variables, which are assumed to be on an A-grid."""
     
@@ -51,17 +52,20 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
         lat['tracer'] = tracer.lat
         lat['u'] = u.lat
         lat['v'] = v.lat
-            
+        
         # vizualize the position
-        ref_idx = 3
         if plot:
+            ref_idx = 3
             plt.figure()
             for vi, var in enumerate(['tracer', 'u', 'v']):
                 plt.plot(lon[var].isel(x=ref_idx,y=ref_idx), lat[var].isel(x=ref_idx,y=ref_idx), marker='*', markersize=25)
                 plt.text(lon[var].isel(x=ref_idx,y=ref_idx), lat[var].isel(x=ref_idx,y=ref_idx), var, ha='center', va='center')
             plt.title('Staggered Grid visualizaton')
-        plt.show()
-        
+            plt.show()
+            
+        if verbose:
+            print('Determine grid shift')
+            
         lon_diff = lon['tracer'] - lon['u']
         # elinate large values due to boundry disc
         lon_diff = lon_diff.where(abs(lon_diff) < 180)
@@ -75,12 +79,14 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
                 position[axis] = ('center', 'left')
             else:
                 position[axis] = ('center', 'right')      
-
+        
+        if verbose:
+            print('Regenerate grid')
         
         ds_full = generate_grid_ds(tracer, {"X": "x", "Y": "y"}, position=position)
         
         # now sort all other variables in accordingly
-        def rename(da, da_tracer, da_u, da_v, grid_type, position):
+        def rename(da, da_tracer, da_u, da_v, grid_type, position, verbose=False):
             # check with which variable the lon and lat agree
             rename_dict = {
                 'B':{'u':{'x':'x_' + position['X'][1], 'y':'y_' + position['Y'][1],
@@ -102,6 +108,7 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
             }
             
             loc = []
+            
             for data, name in zip([da_tracer, da_u, da_v],['tracer', 'u', 'v']):
                 if da.lon.equals(data.lon):
                     loc.append(name)
@@ -116,15 +123,20 @@ def merge_variables_on_staggered_grid(data_dict, modelname,
                 re_dict = {k:v for k,v in rename_dict[grid_type][loc].items() if k in da.variables}
                 da = da.rename(re_dict)
             return da
-            
+        
+        if verbose:
+            print('Renaming and Merging')
         for k,da in data_dict.items():
 #             print('Merging: %s' %k)
-            da_renamed = rename(da, tracer, u, v, grid_type, position)
+            da_renamed = rename(da, tracer, u, v, grid_type, position, verbose=verbose)
 #           # parse all the coordinate values from the reconstructed dataset to the new dataarray
             # or the merging will create intermediate steps
             for co in da_renamed.coords:
                 if co in ds_full.coords:
                     da_renamed.coords[co] = ds_full.coords[co]
+            
+            if verbose:
+                print('Merge')
             ds_full = xr.merge([ds_full, da_renamed])
     return ds_full
 
