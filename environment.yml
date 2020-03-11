@@ -18,4 +18,5 @@ dependencies:
   - pyproj
   - cartopy
   - pip: 
-      - git+https://github.com/xgcm/xgcm.git 
+      - git+https://github.com/xgcm/xgcm.git
+      - cmip6_preprocessing
